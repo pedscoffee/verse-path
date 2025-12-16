@@ -524,18 +524,19 @@ window.startPlan = async (tplId) => {
         alert('Error starting plan');
     }
 };
-const lastPos = await getLastReadingPosition();
-if (lastPos) {
-    state.translation = lastPos.translation;
-    state.book = lastPos.book;
-    state.chapter = lastPos.audioChapter || lastPos.chapter;
-    state.audioTimestamp = lastPos.audioTimestamp || 0;
+window.resumeAudio = async () => {
+    const lastPos = await getLastReadingPosition();
+    if (lastPos) {
+        state.translation = lastPos.translation;
+        state.book = lastPos.book;
+        state.chapter = lastPos.audioChapter || lastPos.chapter;
+        state.audioTimestamp = lastPos.audioTimestamp || 0;
 
-    window.location.hash = 'read';
-    // renderReader will handle loading, then we need to triggering play
-    // We can set a temporary flag
-    state.autoPlay = true;
-}
+        window.location.hash = 'read';
+        // renderReader will handle loading, then we need to triggering play
+        // We can set a temporary flag
+        state.autoPlay = true;
+    }
 };
 
 async function renderReader() {
