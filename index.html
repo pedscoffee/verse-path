@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-stone-50 text-stone-900 antialiased">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Offline-capable Bible PWA for reading, listening, and study.">
+    <meta name="theme-color" content="#fafaf9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Bible PWA</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+
+    <!-- Tailwind CSS (CDN for MVP/Dev transparency) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            300: '#d6d3d1',
+                            400: '#a8a29e',
+                            500: '#78716c',
+                            600: '#57534e',
+                            700: '#44403c',
+                            800: '#292524',
+                            900: '#1c1917',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="./src/css/style.css">
+</head>
+
+<body class="h-full flex flex-col overflow-hidden">
+
+    <!-- App Shell -->
+    <div id="app"
+        class="flex-1 flex flex-col relative h-full w-full max-w-lg mx-auto bg-white shadow-2xl sm:border-x sm:border-stone-200">
+
+        <!-- Header / Top Bar -->
+        <header id="top-bar"
+            class="flex-none h-14 px-4 border-b border-stone-100 flex items-center justify-between bg-white/95 backdrop-blur z-20">
+            <div id="header-left" class="flex items-center gap-2">
+                <button id="menu-btn" class="p-2 -ml-2 text-stone-600 rounded-full hover:bg-stone-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                <div id="current-location"
+                    class="font-serif font-semibold text-lg text-stone-800 truncate max-w-[200px]">
+                    Bible PWA
+                </div>
+            </div>
+            <div id="header-right" class="flex items-center gap-1">
+                <button id="settings-btn" class="p-2 text-stone-500 rounded-full hover:bg-stone-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden relative bg-white overscroll-contain">
+            <!-- Dynamic Content Injected Here -->
+            <div id="router-view" class="p-6 pb-24 min-h-full">
+                <!-- Fallback Loading State -->
+                <div class="flex flex-col items-center justify-center h-full pt-20 space-y-4 animate-pulse">
+                    <div class="h-4 w-3/4 bg-stone-100 rounded"></div>
+                    <div class="h-4 w-1/2 bg-stone-100 rounded"></div>
+                    <div class="h-4 w-2/3 bg-stone-100 rounded"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Audio Player Mini Bar (Hidden by default) -->
+        <div id="mini-player"
+            class="hidden flex-none h-14 bg-stone-50 border-t border-stone-200 px-4 flex items-center justify-between z-20">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <button class="p-1 text-stone-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+                        <path fill-rule="evenodd"
+                            d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div class="truncate">
+                    <div class="text-xs font-semibold text-stone-800">John 1</div>
+                    <div class="text-[10px] text-stone-500">World English Bible</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav id="bottom-nav"
+            class="flex-none h-16 bg-white border-t border-stone-100 flex justify-around items-center px-2 z-30 pb-safe">
+            <button class="nav-item active flex flex-col items-center justify-center w-full h-full text-stone-800"
+                data-route="read">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 mb-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                </svg>
+                <span class="text-[10px] font-medium">Read</span>
+            </button>
+            <button
+                class="nav-item flex flex-col items-center justify-center w-full h-full text-stone-400 hover:text-stone-600 transition-colors"
+                data-route="plans">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 mb-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
+                <span class="text-[10px] font-medium">Plans</span>
+            </button>
+            <button
+                class="nav-item flex flex-col items-center justify-center w-full h-full text-stone-400 hover:text-stone-600 transition-colors"
+                data-route="journal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 mb-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+                <span class="text-[10px] font-medium">Journal</span>
+            </button>
+            <button
+                class="nav-item flex flex-col items-center justify-center w-full h-full text-stone-400 hover:text-stone-600 transition-colors"
+                data-route="highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 mb-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                </svg>
+                <span class="text-[10px] font-medium">Highlights</span>
+            </button>
+        </nav>
+        <!-- Navigation Modal (Slide up) -->
+        <div id="nav-modal"
+            class="fixed inset-0 z-50 transform transition-transform duration-300 translate-y-full flex flex-col bg-white">
+            <!-- Modal Header -->
+            <div class="flex-none h-14 bg-stone-50 border-b border-stone-100 flex items-center justify-between px-4">
+                <div class="font-semibold text-stone-800">Navigate</div>
+                <button id="close-nav-btn" class="p-2 text-stone-500 hover:bg-stone-200 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-stone-100">
+                <button id="tab-books"
+                    class="flex-1 py-3 text-sm font-medium text-stone-800 border-b-2 border-stone-800">Books</button>
+                <button id="tab-chapters" class="flex-1 py-3 text-sm font-medium text-stone-400">Chapters</button>
+                <button id="tab-translations"
+                    class="flex-1 py-3 text-sm font-medium text-stone-400">Translation</button>
+            </div>
+
+            <!-- Content Area -->
+            <div id="nav-content" class="flex-1 overflow-y-auto bg-stone-50 p-4">
+                <!-- Dynamic Content injected here -->
+                <div id="books-list" class="grid grid-cols-1 gap-2"></div>
+                <div id="chapters-list" class="grid grid-cols-5 gap-3 hidden"></div>
+                <div id="translations-list" class="flex flex-col gap-2 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script> <!-- Dexie.js for IndexedDB -->
+    <script type="module" src="./src/js/app.js"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>

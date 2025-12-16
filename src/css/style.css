@@ -1,0 +1,17 @@
+/* Custom styles to supplement Tailwind */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Safe area padding for iPhones */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
