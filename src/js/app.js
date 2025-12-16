@@ -269,19 +269,273 @@ async function renderHome() {
     `;
 }
 
-window.resumeAudio = async () => {
-    const lastPos = await getLastReadingPosition();
-    if (lastPos) {
-        state.translation = lastPos.translation;
-        state.book = lastPos.book;
-        state.chapter = lastPos.audioChapter || lastPos.chapter;
-        state.audioTimestamp = lastPos.audioTimestamp || 0;
+async function renderPlans() {
+    topBarTitle.textContent = 'Reading Plans';
+    await plansController.load();
 
-        window.location.hash = 'read';
-        // renderReader will handle loading, then we need to triggering play
-        // We can set a temporary flag
-        state.autoPlay = true;
+    const mode = state.params.mode || 'list'; // list, browse, detail
+
+    if (mode === 'list') {
+        const activePlans = plansController.activePlans;
+
+        let html = `
+            <div class="max-w-md mx-auto space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-serif font-bold text-stone-800">My Plans</h2>
+                    <button onclick="window.location.hash='plans?mode=browse'" class="text-stone-600 bg-stone-100 hover:bg-stone-200 px-3 py-1 rounded-full text-sm font-medium transition">
+                        + Add Plan
+                    </button>
+                </div>
+        `;
+
+        if (activePlans.length === 0) {
+            html += `
+                <div class="text-center py-10 bg-stone-50 rounded-xl border border-stone-100 border-dashed">
+                    <p class="text-stone-500 mb-4">You haven't started any reading plans yet.</p>
+                    <button onclick="window.location.hash='plans?mode=browse'" class="bg-stone-800 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-stone-700 transition">Browse Plans</button>
+                </div>
+            `;
+        } else {
+            html += `<div class="grid grid-cols-1 gap-4">`;
+            activePlans.forEach(plan => {
+                html += `
+                    <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm cursor-pointer hover:border-stone-400 transition" onclick="window.location.hash='plans?mode=detail&id=${plan.id}'">
+                        <div class="flex justify-between items-start mb-2">
+                             <h3 class="font-serif font-bold text-lg text-stone-800">${plan.title}</h3>
+                             <span class="text-xs font-bold text-stone-400 bg-stone-50 px-2 py-1 rounded-full">${plan.progress}%</span>
+                        </div>
+                        <div class="w-full bg-stone-100 rounded-full h-1.5 mb-2">
+                            <div class="bg-green-500 h-1.5 rounded-full" style="width: ${plan.progress}%"></div>
+                        </div>
+                        <div class="text-xs text-stone-500">
+                             Day ${plan.completedDays.length + 1} of ${plan.totalDays}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        routerView.innerHTML = html;
+
+    } else if (mode === 'browse') {
+        const templates = plansController.availablePlans;
+
+        let html = `
+            <div class="max-w-md mx-auto space-y-4">
+                <button onclick="window.location.hash='plans'" class="mb-4 text-stone-500 hover:text-stone-800 flex items-center gap-1 text-sm font-medium">
+                    ← Back to My Plans
+                </button>
+                <h2 class="text-2xl font-serif font-bold text-stone-800 mb-6">Available Plans</h2>
+                <div class="grid grid-cols-1 gap-4">
+        `;
+
+        templates.forEach(tpl => {
+            html += `
+                <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="font-serif font-bold text-lg text-stone-800 mb-1">${tpl.name}</h3>
+                    <p class="text-sm text-stone-500 mb-4 leading-relaxed">${tpl.description}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-stone-400 font-medium bg-stone-50 px-2 py-1 rounded border border-stone-100">${tpl.days} Days</span>
+                        <button onclick="window.startPlan('${tpl.id}')" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-stone-700 transition">Start Plan</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
+        routerView.innerHTML = html;
+
+    } else if (mode === 'detail') {
+        const planId = state.params.id;
+        const plan = plansController.activePlans.find(p => p.id === planId);
+
+        if (!plan) {
+            window.location.hash = 'plans';
+            return;
+        }
+
+        let html = `
+             <div class="max-w-md mx-auto space-y-6">
+                <button onclick="window.location.hash='plans'" class="mb-2 text-stone-500 hover:text-stone-800 flex items-center gap-1 text-sm font-medium">
+                    ← Back
+                </button>
+                
+                <div class="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center">
+                     <h2 class="text-2xl font-serif font-bold text-stone-800 mb-2">${plan.title}</h2>
+                     <div class="text-4xl font-bold text-stone-900 mb-1">${plan.progress}%</div>
+                     <p class="text-stone-500 text-sm">Completed</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-bold text-stone-800 text-lg px-2">Days</h3>
+        `;
+
+        for (let i = 1; i <= plan.totalDays; i++) {
+            const isCompleted = plan.completedDays.includes(i);
+            const isNext = !isCompleted && !plan.completedDays.includes(i - 1) && (i === 1 || plan.completedDays.includes(i - 1));
+
+            html += `
+                <div class="flex items-center p-3 rounded-lg border ${isCompleted ? 'bg-stone-50 border-stone-100' : 'bg-white border-stone-200'} ${isNext ? 'ring-2 ring-stone-800 border-transparent shadow-md' : ''}">
+                    <button onclick="window.toggleDay('${plan.id}', ${i})" class="flex-none p-2 rounded-full border ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-stone-300 text-transparent hover:border-stone-400'} transition mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                            <path fill-rule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-9a.75.75 0 0 1 1.06-1.06l5.353 8.03 8.493-12.74a.75.75 0 0 1 1.04-.208Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium ${isCompleted ? 'text-stone-400 line-through' : 'text-stone-800'}">Day ${i}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `</div></div>`;
+        routerView.innerHTML = html;
+
+        setTimeout(() => {
+            const nextEl = document.querySelector('.ring-2');
+            if (nextEl) nextEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     }
+}
+
+async function renderJournal() {
+    topBarTitle.textContent = 'Journal';
+    const mode = state.params.mode || 'list';
+
+    if (mode === 'list') {
+        const entries = await db.journal.reverse().toArray();
+
+        let html = `
+            <div class="max-w-md mx-auto space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-serif font-bold text-stone-800">My Journal</h2>
+                    <button onclick="window.location.hash='journal?mode=edit'" class="text-white bg-stone-800 hover:bg-stone-700 px-3 py-1 rounded-full text-sm font-medium transition shadow-sm">
+                        + New Entry
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="text" placeholder="Search entries..." class="w-full bg-stone-50 border border-stone-200 rounded-lg py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    <svg class="w-4 h-4 text-stone-400 absolute left-3 top-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+        `;
+
+        if (entries.length === 0) {
+            html += `
+                <div class="text-center py-10">
+                    <p class="text-stone-400 mb-4">No journal entries yet.</p>
+                </div>
+            </div>`;
+        } else {
+            html += `<div class="grid grid-cols-1 gap-4">`;
+            entries.forEach(entry => {
+                const dateStr = new Date(entry.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const preview = entry.content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...';
+
+                html += `
+                    <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm cursor-pointer hover:border-stone-400 transition" onclick="window.location.hash='journal?mode=edit&id=${entry.id}'">
+                        <div class="mb-2">
+                             <h3 class="font-serif font-bold text-lg text-stone-800">${entry.title || 'Untitled'}</h3>
+                             <div class="text-xs text-stone-400 font-medium uppercase tracking-wide">${dateStr}</div>
+                        </div>
+                        <p class="text-sm text-stone-600 leading-relaxed">${preview}</p>
+                         ${entry.tags ? `
+                            <div class="mt-3 flex gap-2">
+                                ${entry.tags.map(t => `<span class="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded">${t}</span>`).join('')}
+                            </div>
+                         ` : ''}
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+        routerView.innerHTML = html;
+
+    } else if (mode === 'edit') {
+        const id = state.params.id ? parseInt(state.params.id) : null;
+        let entry = { title: '', content: '', tags: [] };
+
+        if (id) {
+            entry = await db.journal.get(id);
+        }
+
+        let html = `
+            <div class="max-w-md mx-auto flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="window.location.hash='journal'" class="text-stone-500 hover:text-stone-800 text-sm font-medium">Cancel</button>
+                    <button onclick="window.saveJournalEntry(${id})" class="text-white bg-stone-800 hover:bg-stone-700 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">Save</button>
+                </div>
+                
+                <input type="text" id="journal-title" value="${entry.title}" placeholder="Title" class="text-2xl font-serif font-bold text-stone-800 placeholder-stone-300 border-none focus:ring-0 p-0 mb-4 bg-transparent w-full">
+                
+                <div class="flex gap-2 mb-2 border-b border-stone-100 pb-2 overflow-x-auto">
+                    <button class="p-2 text-stone-500 hover:bg-stone-100 rounded" onclick="document.execCommand('bold')"><b>B</b></button>
+                    <button class="p-2 text-stone-500 hover:bg-stone-100 rounded" onclick="document.execCommand('italic')"><i>I</i></button>
+                    <button class="p-2 text-stone-500 hover:bg-stone-100 rounded" onclick="document.execCommand('underline')"><u>U</u></button>
+                    <div class="w-px bg-stone-200 mx-1"></div>
+                    <button class="p-2 text-stone-500 hover:bg-stone-100 rounded" onclick="document.execCommand('insertUnorderedList')">• List</button>
+                    <button class="p-2 text-stone-500 hover:bg-stone-100 rounded" onclick="document.execCommand('insertOrderedList')">1. List</button>
+                </div>
+                
+                <div id="journal-editor" contenteditable="true" class="flex-1 text-lg text-stone-800 leading-relaxed outline-none min-h-[300px] prose prose-stone" placeholder="Write your thoughts...">${entry.content}</div>
+                
+                <div class="mt-4 pt-4 border-t border-stone-100">
+                    <input type="text" id="journal-tags" value="${entry.tags ? entry.tags.join(', ') : ''}" placeholder="Tags (comma separated)" class="w-full text-sm text-stone-500 bg-transparent border-none focus:ring-0 p-0">
+                </div>
+            </div>
+        `;
+        routerView.innerHTML = html;
+
+        if (!id) document.getElementById('journal-title').focus();
+    }
+}
+
+window.saveJournalEntry = async (id) => {
+    const title = document.getElementById('journal-title').value;
+    const content = document.getElementById('journal-editor').innerHTML;
+    const tagsStr = document.getElementById('journal-tags').value;
+    const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t);
+
+    const entry = {
+        title,
+        content,
+        tags,
+        date: id ? (await db.journal.get(id)).date : Date.now()
+    };
+
+    if (id) {
+        await db.journal.update(id, entry);
+    } else {
+        await db.journal.add(entry);
+    }
+
+    window.location.hash = 'journal';
+};
+
+window.startPlan = async (tplId) => {
+    try {
+        await plansController.startPlan(tplId);
+        window.location.hash = 'plans';
+    } catch (e) {
+        console.error(e);
+        alert('Error starting plan');
+    }
+};
+const lastPos = await getLastReadingPosition();
+if (lastPos) {
+    state.translation = lastPos.translation;
+    state.book = lastPos.book;
+    state.chapter = lastPos.audioChapter || lastPos.chapter;
+    state.audioTimestamp = lastPos.audioTimestamp || 0;
+
+    window.location.hash = 'read';
+    // renderReader will handle loading, then we need to triggering play
+    // We can set a temporary flag
+    state.autoPlay = true;
+}
 };
 
 async function renderReader() {

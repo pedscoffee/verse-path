@@ -8,7 +8,7 @@ db.version(1).stores({
     readingPosition: '++id, translation, book, chapter, verse, audioTimestamp, audioChapter, timestamp', // History of reading
 
     // User Created Content
-    highlights: '++id, translation, book, chapter, verse, color, timestamp',
+    highlights: '++id, translation, book, chapter, verse, color, timestamp, [translation+book+chapter]',
     notes: '++id, highlightId, text, timestamp',
     journal: '++id, title, content, date, tags', // content is rich text html/markdown
     plans: 'id, title, type, startDate, progress', // Reading plans
