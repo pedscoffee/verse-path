@@ -5,7 +5,7 @@ export const db = new Dexie('BiblePWA_DB');
 db.version(1).stores({
     // User Settings & State
     settings: 'key, value', // generic key-value store for preferences
-    readingPosition: '++id, translation, book, chapter, verse, timestamp', // History of reading
+    readingPosition: '++id, translation, book, chapter, verse, audioTimestamp, audioChapter, timestamp', // History of reading
 
     // User Created Content
     highlights: '++id, translation, book, chapter, verse, color, timestamp',

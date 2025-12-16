@@ -1,0 +1,48 @@
+{
+    "GEN 1:1": [
+        {
+            "ref": "JHN 1:1",
+            "type": "Theology",
+            "desc": "Creation and the Word"
+        },
+        {
+            "ref": "HEB 11:3",
+            "type": "Faith",
+            "desc": "Creation by Word"
+        },
+        {
+            "ref": "PSA 33:6",
+            "type": "Parallel",
+            "desc": "By the word of the Lord"
+        }
+    ],
+    "JHN 1:1": [
+        {
+            "ref": "GEN 1:1",
+            "type": "Theology",
+            "desc": "In the beginning"
+        },
+        {
+            "ref": "1JN 1:1",
+            "type": "Parallel",
+            "desc": "Word of Life"
+        },
+        {
+            "ref": "REV 19:13",
+            "type": "Reference",
+            "desc": "Name is The Word of God"
+        }
+    ],
+    "JHN 3:16": [
+        {
+            "ref": "ROM 5:8",
+            "type": "Theology",
+            "desc": "God's Love"
+        },
+        {
+            "ref": "1JN 4:9",
+            "type": "Parallel",
+            "desc": "Sent his only Son"
+        }
+    ]
+}

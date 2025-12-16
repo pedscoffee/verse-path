@@ -1,0 +1,35 @@
+[
+    {
+        "id": "canonical-1y",
+        "name": "One Year Canonical",
+        "description": "Read through the entire Bible from Genesis to Revelation in 365 days.",
+        "days": 365,
+        "type": "sequential",
+        "start": {
+            "book": "GEN",
+            "chapter": 1
+        }
+    },
+    {
+        "id": "nt-30d",
+        "name": "New Testament in 30 Days",
+        "description": "An intensive plan to read the entire New Testament in just one month.",
+        "days": 30,
+        "type": "range",
+        "ranges": [
+            {
+                "startBook": "MAT",
+                "startChapter": 1,
+                "endBook": "REV",
+                "endChapter": 22
+            }
+        ]
+    },
+    {
+        "id": "psalms-proverbs-monthly",
+        "name": "Psalms & Proverbs Monthly",
+        "description": "Read 5 Psalms and 1 Proverb every day to finish both books in a month.",
+        "days": 30,
+        "type": "mixed"
+    }
+]
