@@ -35,21 +35,39 @@ export class PlansController {
     }
 
     getDailyReading(plan, dayNum) {
-        // Simple logic for MVP:
-        // Assume simplified "Canonical" logic where we just divide chapters or hardcode ranges
-        // Creating a true daily calculator for all Bibles is complex.
-        // For MVP, allow "Check In" validation rather than strict "Read Gen 1-3".
-        // Or implement a simple "Next Chapter" tracker.
-
-        // Let's implement a generic "Goal" based approach for MVP.
+        // Implement logic based on plan type
         const template = this.availablePlans.find(p => p.id === plan.templateId);
 
-        if (template.id === 'canonical-1y') {
-            // Approx 1189 chapters / 365 = ~3.25 chapters/day.
-            return {
-                desc: `Day ${dayNum}: Read ~3-4 Chapters`,
-                link: null // TODO: Calculate exact start/end logic
-            };
+        if (!template) return { desc: `Day ${dayNum}`, link: null };
+
+        if (template.type === 'sequential') {
+            // E.g. Canonical 1Y. Generic "Read X chapters"
+            // We need metadata to know total chapters in Bible (1189).
+            // A simple approximation: Map day to a chapter range.
+            // For MVP without heavy map: Just generic goal.
+            // OR specifically for 'canonical-1y', we can be smarter if we have a book list.
+
+            // Let's implement robust "Read ~3 ch/day" logic if it's canonical
+            if (template.id === 'canonical-1y') {
+                // Harder to do exact references without full bible structure loaded.
+                // Fallback to generic message
+                return { desc: `Day ${dayNum}: Read approx. 3 chapters`, link: null };
+            }
+
+        } else if (template.type === 'range') {
+            // "NT in 30 Days"
+            // 260 chapters in NT. 260/30 = 8.6 chapters/day.
+            if (template.id === 'nt-30d') {
+                // We can be precise here
+                const startCh = (dayNum - 1) * 9; // Approx 9 chapters/day
+                // This is crude without knowing chapter counts per book perfectly.
+                return { desc: `Day ${dayNum}: Read approx. 9 chapters (NT)`, link: null };
+            }
+        } else if (template.type === 'mixed') {
+            // Psalms & Proverbs
+            if (template.id === 'psalms-proverbs-monthly') {
+                return { desc: `Day ${dayNum}: 5 Psalms + 1 Proverb`, link: null };
+            }
         }
 
         return {

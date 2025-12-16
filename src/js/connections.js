@@ -118,14 +118,23 @@ export class ConnectionsController {
             if (label && label !== ref && label !== 'No connections found') {
                 // Parse ref (Simple parser)
                 // Assuming format "BOOK CH:V"
-                const parts = label.split(' ');
-                const book = parts[0];
-                const cv = parts[1].split(':');
-                const ch = cv[0];
-                const v = cv[1];
+
 
                 if (window.navigateToVerse) {
-                    window.navigateToVerse(book, parseInt(ch), parseInt(v));
+                    // Robust parser:
+                    // Expected: "BOOK CH:V" or "1 BOOK CH:V"
+                    // Split by last space to separate VERSE REFERENCE from BOOK NAME
+                    const lastSpaceIdx = label.lastIndexOf(' ');
+                    if (lastSpaceIdx === -1) return; // Invalid format
+
+                    const bookName = label.substring(0, lastSpaceIdx);
+                    const refPart = label.substring(lastSpaceIdx + 1); // "CH:V" or "CH"
+
+                    const cv = refPart.split(':');
+                    const ch = parseInt(cv[0]);
+                    const v = cv.length > 1 ? parseInt(cv[1]) : 1;
+
+                    window.navigateToVerse(bookName, ch, v);
                     modal.remove();
                 }
             }

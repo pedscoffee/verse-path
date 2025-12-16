@@ -421,6 +421,10 @@ async function renderJournal() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
+                
+                <div class="flex justify-end">
+                     <button onclick="window.exportJournal()" class="text-xs text-stone-500 hover:text-stone-800 underline">Export Data (JSON)</button>
+                </div>
         `;
 
         if (entries.length === 0) {
@@ -513,6 +517,17 @@ window.saveJournalEntry = async (id) => {
     }
 
     window.location.hash = 'journal';
+};
+
+window.exportJournal = async () => {
+    const entries = await db.journal.toArray();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entries, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "journal_export.json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
 };
 
 window.startPlan = async (tplId) => {
@@ -843,9 +858,9 @@ async function renderHighlights() {
                                  <h3 class="font-serif font-bold text-stone-800">${h.book} ${h.chapter}:${h.verse}</h3>
                                  <span class="text-xs text-stone-400">${new Date(h.timestamp).toLocaleDateString()}</span>
                              </div>
-                             ${note ? `<p class="text-sm text-stone-600 italic border-l-2 border-stone-100 pl-2 mb-2">"${note.text}"</p>` : ''}
-                             <!-- Snippet placeholder -->
-                             <p class="text-xs text-stone-500">Tap to view in context &rarr;</p>
+                             ${h.text ? `<p class="text-sm text-stone-800 font-serif mb-2 leading-relaxed line-clamp-2">"${h.text}"</p>` : ''}
+                             ${note ? `<p class="text-xs text-stone-600 italic border-l-2 border-stone-100 pl-2 mb-2">Note: "${note.text}"</p>` : ''}
+                             <p class="text-xs text-stone-400 hover:text-stone-600 transition">View in context &rarr;</p>
                         </div>
                     </div>
                 </div>
@@ -964,12 +979,20 @@ window.addHighlight = async (color) => {
         }
     } else {
         // Add
+        // Get text from DOM or State because we want snippet
+        let text = '';
+        if (state.currentVerses) {
+            const vData = state.currentVerses.find(v => v.verse === activeVerse);
+            if (vData) text = vData.text;
+        }
+
         await db.highlights.add({
             translation: state.translation,
             book: state.book,
             chapter: state.chapter,
             verse: activeVerse,
             color,
+            text, // Store snippet
             timestamp: Date.now()
         });
     }
